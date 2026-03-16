@@ -960,10 +960,10 @@ local function main()
 		local insts = getDescendants(root)
 		for i = 1,#insts do
 			local obj = insts[i]
-			if nodes[obj] then -- continue (removed for Lua5.2) end -- Deferred
+			-- [Lua5.2 skip] if nodes[obj] then continue end -- Deferred
 
 			local par = nodes[ffa(obj,"Instance")]
-			if not par then -- continue (removed for Lua5.2) end
+			-- [Lua5.2 skip] if not par then continue end
 			local newNode = {Obj = obj, Parent = par}
 			nodes[obj] = newNode
 			par[#par+1] = newNode
@@ -1234,7 +1234,7 @@ local function main()
 			for i = 1,#root do
 				local n = root[i]
 
-				if (isSearching and not searchResults[n]) or n.Del then -- continue (removed for Lua5.2) end
+				-- [Lua5.2 skip] if (isSearching and not searchResults[n]) or n.Del then continue end
 
 				if useNameWidth then
 					local nameWidth = n.NameWidth
@@ -3412,7 +3412,7 @@ return search]==]
 			for i = 1,#insts do
 				local obj = insts[i]
 				local par = nodes[ffa(obj,"Instance")]
-				if not par then -- continue (removed for Lua5.2) end
+				-- [Lua5.2 skip] if not par then continue end
 				local newNode = {
 					Obj = obj,
 					Parent = par,
@@ -3425,7 +3425,7 @@ return search]==]
 				local obj = insts[i]
 				local s,parObj = pcall(ffa,obj,"Instance")
 				local par = nodes[parObj]
-				if not par then -- continue (removed for Lua5.2) end
+				-- [Lua5.2 skip] if not par then continue end
 				local newNode = {
 					Obj = obj,
 					Parent = par,
@@ -8089,7 +8089,7 @@ local function main()
 
 			for i = 1,#found do
 				local pos = found[i]
-				if pos <= lastEnding then -- continue (removed for Lua5.2) end
+				-- [Lua5.2 skip] if pos <= lastEnding then continue end
 
 				local ending = pos
 				local typ = foundMap[pos]
@@ -8179,7 +8179,8 @@ local function main()
 			for col = 1,#lineText do
 				if col <= lastEnding then
 					highlights[col] = currentType
-				else
+				end
+				if col > lastEnding then
 
 				local pre = preHighlightMap[col]
 				if pre then
@@ -8273,8 +8274,7 @@ local function main()
 						end
 					end
 				end
-			end
-			end -- close else (col > lastEnding)
+				end -- close if col > lastEnding
 			end -- close for col
 
 			self.ColoredLines[line] = highlights
@@ -16930,11 +16930,10 @@ local function PlayDexCutscene(onFinish)
 end
 
 
--- ── Jalankan cutscene, lalu Init DEX ──────────────────────────────
+-- ── Jalankan cutscene lalu DEX ────────────────────────────────────
 local ok, err = pcall(PlayDexCutscene, function()
 	Main.Init()
 end)
-
 if not ok then
 	warn("[DEX Cutscene] Error: " .. tostring(err))
 	Main.Init()
