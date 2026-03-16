@@ -55,6 +55,36 @@ local function PlayDexCutscene(onFinish)
 		return t
 	end
 
+	-- Camera lerp helper (TweenService gak selalu bisa tween Camera di exploit)
+	local camTarget  = camera.CFrame
+	local camLerping = false
+	local camConn    = nil
+
+	local function moveCam(targetCF, duration)
+		if camConn then
+			camConn:Disconnect()
+			camConn = nil
+		end
+		camTarget = targetCF
+		local startCF = camera.CFrame
+		local elapsed  = 0
+		camLerping = true
+		camConn = RunService.RenderStepped:Connect(function(dt)
+			elapsed = elapsed + dt
+			local alpha = math.min(elapsed / duration, 1)
+			-- Smooth ease in-out
+			local t2 = alpha * alpha * (3 - 2 * alpha)
+			camera.CFrame = startCF:Lerp(targetCF, t2)
+			if alpha >= 1 then
+				camera.CFrame = targetCF
+				camLerping = false
+				camConn:Disconnect()
+				camConn = nil
+			end
+		end)
+	end
+
+
 	-- ── GUI Setup ─────────────────────────────────────────────────
 	local cutsceneGui = Instance.new("ScreenGui")
 	cutsceneGui.Name           = "DexCutscene"
@@ -424,14 +454,22 @@ local function PlayDexCutscene(onFinish)
 	camera.CFrame = CFrame.new(0, 35, 0) * CFrame.Angles(math.rad(-90), 0, 0)
 	fw(0.9)
 
-	-- ── FASE 1: Night sky fade in ─────────────────────────────────
-	tw(skyBg, TweenInfo.new(1.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-		{BackgroundTransparency = 0})
-	tw(blackFrame, TweenInfo.new(2.0, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-		{BackgroundTransparency = 1})
-	tw(camera, TweenInfo.new(2.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-		CFrame = CFrame.new(20, 9, 20) * CFrame.Angles(math.rad(-20), math.rad(45), 0)
-	})
+	-- ── FASE 1: Night sky fade in (manual fade) ─────────────────────
+	skyBg.BackgroundTransparency = 0
+	moveCam(CFrame.new(20, 9, 20) * CFrame.Angles(math.rad(-20), math.rad(45), 0), 2.5)
+
+	-- Manual fade blackFrame (TweenService kadang gak work di exploit untuk GUI)
+	coroutine.wrap(function()
+		local fadeDur = 1.8
+		local el = 0
+		while el < fadeDur do
+			local dt2 = RunService.RenderStepped:Wait()
+			el = el + dt2
+			blackFrame.BackgroundTransparency = math.min(el / fadeDur, 1)
+		end
+		blackFrame.BackgroundTransparency = 1
+		blackFrame.Visible = false
+	end)()
 
 	-- Stars twinkle in
 	for i, star in ipairs(starLabels) do
@@ -519,9 +557,7 @@ local function PlayDexCutscene(onFinish)
 	fw(1.5)
 
 	-- ── FASE 2: Pillars rise + aurora reveal ─────────────────────
-	tw(camera, TweenInfo.new(3.0, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-		CFrame = CFrame.new(-22, 5, 14) * CFrame.Angles(math.rad(-10), math.rad(-50), 0)
-	})
+	moveCam(CFrame.new(-22, 5, 14) * CFrame.Angles(math.rad(-10), math.rad(-50), 0), 3.0)
 
 	for i, pd in ipairs(pillars) do
 		if not pd.isBall then
@@ -553,9 +589,7 @@ local function PlayDexCutscene(onFinish)
 	fw(2.0)
 
 	-- ── FASE 3: Low hero shot (moon prominent) ────────────────────
-	tw(camera, TweenInfo.new(2.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-		CFrame = CFrame.new(0, 1.5, 16) * CFrame.Angles(math.rad(8), 0, 0)
-	})
+	moveCam(CFrame.new(0, 1.5, 16) * CFrame.Angles(math.rad(8), 0, 0), 2.2)
 
 	fw(0.6)
 
@@ -789,9 +823,7 @@ local function PlayDexCutscene(onFinish)
 	fw(0.3)
 
 	-- ── FASE 4: Push-in ke moon ────────────────────────────────────
-	tw(camera, TweenInfo.new(2.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
-		CFrame = CFrame.new(0, 7, 12) * CFrame.Angles(math.rad(-8), 0, 0)
-	})
+	moveCam(CFrame.new(0, 7, 12) * CFrame.Angles(math.rad(-8), 0, 0), 2.2)
 
 	-- ── SHAKE 2: Dramatic shake saat camera push-in ────────────────
 	coroutine.wrap(function()
@@ -821,9 +853,7 @@ local function PlayDexCutscene(onFinish)
 	fw(2.2)
 
 	-- ── FASE 5: Final orbit (Moon overhead) ───────────────────────
-	tw(camera, TweenInfo.new(1.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-		CFrame = CFrame.new(10, 10, -12) * CFrame.Angles(math.rad(-20), math.rad(140), 0)
-	})
+	moveCam(CFrame.new(10, 10, -12) * CFrame.Angles(math.rad(-20), math.rad(140), 0), 1.8)
 
 	fw(1.2)
 
